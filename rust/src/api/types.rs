@@ -1,6 +1,6 @@
 use flutter_rust_bridge::frb;
 use lwk_common::PsetBalance;
-use lwk_wollet::{ elements::{hex::{FromHex, ToHex}, secp256k1_zkp, Address as LwkAddress, AddressParams, AssetId, Script}, secp256k1, AddressResult, ElectrumClient, WalletTx, WalletTxOut};
+use lwk_wollet::{elements, elements::{hex::{FromHex, ToHex}, secp256k1_zkp, Address as LwkAddress, AddressParams, AssetId, Script}, secp256k1, AddressResult, ElectrumClient, WalletTx, WalletTxOut};
 pub use std::collections::{BTreeMap, HashMap};
 pub use std::vec::Vec;
 use std::str::FromStr;
@@ -84,7 +84,7 @@ impl From<AssetIdHashMapInt> for Balances {
 }
 
 use std::convert::TryFrom;
-
+use lwk_wollet::elements::{confidential, TxOutWitness};
 use super::error::LwkError;
 
 impl From<AssetIdBTreeMapUInt> for Balances {
@@ -238,6 +238,63 @@ pub struct TxOutSecrets {
     pub asset: String,
     pub asset_bf: String,
 }
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternalUtxo {
+    pub outpoint: OutPoint,
+
+    /// The transaction output
+    pub txout: TxOut,
+
+    /// The unblinded values
+    pub unblinded: TxOutSecrets,
+
+    /// Max weight to satisfy
+    pub max_weight_to_satisfy: usize,
+}
+
+impl TryFrom<ExternalUtxo> for lwk_wollet::ExternalUtxo {
+    type Error = LwkError;
+
+    fn try_from(value: ExternalUtxo) -> Result<Self, Self::Error> {
+        // Convert OutPoint
+        let outpoint = elements::OutPoint {
+            txid: value.outpoint.txid.parse()?,
+            vout: value.outpoint.vout,
+        };
+
+        // Convert TxOut
+        let txout = elements::TxOut {
+            asset: confidential::Asset::Explicit(
+                AssetId::from_str(&value.unblinded.asset)
+                    .map_err(|e| LwkError { msg: e.to_string() })?,
+            ),
+            value: confidential::Value::Explicit(value.unblinded.value),
+            nonce: confidential::Nonce::Null,
+            script_pubkey: Script::from_hex(&value.txout.script_pubkey)
+                .map_err(|e| LwkError { msg: e.to_string() })?,
+            witness: TxOutWitness::default(),
+        };
+
+        // Convert TxOutSecrets
+        let unblinded = elements::TxOutSecrets {
+            asset: AssetId::from_str(&value.unblinded.asset)
+                .map_err(|e| LwkError { msg: e.to_string() })?,
+            asset_bf: value.unblinded.asset_bf.parse()?,
+            value: value.unblinded.value,
+            value_bf: value.unblinded.value_bf.parse()?
+        };
+
+        Ok(lwk_wollet::ExternalUtxo {
+            outpoint,
+            txout,
+            unblinded,
+            max_weight_to_satisfy: value.max_weight_to_satisfy,
+        })
+    }
+}
+
 
 /// Transaction object returned by getTransactions.
 #[derive(Clone, Debug, PartialEq)]

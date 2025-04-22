@@ -22,7 +22,7 @@ use std::sync::MutexGuard;
 
 use super::descriptor::Descriptor;
 use super::error::LwkError;
-use super::types::Address;
+use super::types::{Address, ExternalUtxo};
 use super::types::AssetIdBTreeMapUInt;
 use super::types::Balances;
 use super::types::Network;
@@ -156,21 +156,26 @@ impl Wallet {
         out_address: String,
         fee_rate: f32,
         asset: String,
+        external_utxos: Option<Vec<ExternalUtxo>>,
     ) -> anyhow::Result<String, LwkError> {
         let wallet = self.get_wallet()?;
         let tx_builder = wallet.tx_builder();
         let address = LwkAddress::from_str(&out_address)?;
-        let asset = match LwkAssetId::from_str(&asset) {
-            Ok(result) => result,
-            Err(_) => {
-                return Err(LwkError {
-                    msg: "Invalid asset".to_string(),
-                })
-            }
-        };
+        let asset = LwkAssetId::from_str(&asset).map_err(|_| LwkError {
+            msg: "Invalid asset".to_string(),
+        })?;
+
+        // Convert api::types::ExternalUtxo to lwk_wollet::ExternalUtxo
+        let external_utxos_lwk: Vec<lwk_wollet::ExternalUtxo> = external_utxos
+            .unwrap_or_default()
+            .into_iter()
+            .map(|eu| lwk_wollet::ExternalUtxo::try_from(eu))
+            .collect::<Result<Vec<_>, LwkError>>()?;
+
         let pset = tx_builder
             .add_recipient(&address, sats, asset)?
             .enable_ct_discount()
+            .add_external_utxos(external_utxos_lwk)?
             .fee_rate(Some(fee_rate))
             .finish()?;
         Ok(pset.to_string())
