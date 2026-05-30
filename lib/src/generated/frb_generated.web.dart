@@ -39,6 +39,9 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
   Address dco_decode_address(dynamic raw);
 
   @protected
+  AssetRecipient dco_decode_asset_recipient(dynamic raw);
+
+  @protected
   Balance dco_decode_balance(dynamic raw);
 
   @protected
@@ -70,6 +73,9 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  List<AssetRecipient> dco_decode_list_asset_recipient(dynamic raw);
 
   @protected
   List<Balance> dco_decode_list_balance(dynamic raw);
@@ -148,6 +154,9 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
   Address sse_decode_address(SseDeserializer deserializer);
 
   @protected
+  AssetRecipient sse_decode_asset_recipient(SseDeserializer deserializer);
+
+  @protected
   Balance sse_decode_balance(SseDeserializer deserializer);
 
   @protected
@@ -179,6 +188,10 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  List<AssetRecipient> sse_decode_list_asset_recipient(
+      SseDeserializer deserializer);
 
   @protected
   List<Balance> sse_decode_list_balance(SseDeserializer deserializer);
@@ -264,6 +277,16 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
   }
 
   @protected
+  JSAny cst_encode_asset_recipient(AssetRecipient raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_String(raw.address),
+      cst_encode_u_64(raw.sats),
+      cst_encode_String(raw.asset)
+    ].jsify()!;
+  }
+
+  @protected
   JSAny cst_encode_balance(Balance raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return [cst_encode_String(raw.assetId), cst_encode_i_64(raw.value)]
@@ -310,6 +333,12 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
   JSAny cst_encode_i_64(PlatformInt64 raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return castNativeBigInt(raw);
+  }
+
+  @protected
+  JSAny cst_encode_list_asset_recipient(List<AssetRecipient> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.map(cst_encode_asset_recipient).toList().jsify()!;
   }
 
   @protected
@@ -489,6 +518,10 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
   void sse_encode_address(Address self, SseSerializer serializer);
 
   @protected
+  void sse_encode_asset_recipient(
+      AssetRecipient self, SseSerializer serializer);
+
+  @protected
   void sse_encode_balance(Balance self, SseSerializer serializer);
 
   @protected
@@ -522,6 +555,10 @@ abstract class LwkCoreApiImplPlatform extends BaseApiImpl<LwkCoreWire> {
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_asset_recipient(
+      List<AssetRecipient> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_balance(List<Balance> self, SseSerializer serializer);
@@ -665,6 +702,14 @@ class LwkCoreWire implements BaseWire {
       wasmModule.wire__crate__api__wallet__wallet_build_asset_tx(
           port_, that, sats, out_address, fee_rate, asset);
 
+  void wire__crate__api__wallet__wallet_build_asset_tx_multi(
+          NativePortType port_,
+          JSAny that,
+          JSAny recipients,
+          double fee_rate) =>
+      wasmModule.wire__crate__api__wallet__wallet_build_asset_tx_multi(
+          port_, that, recipients, fee_rate);
+
   void wire__crate__api__wallet__wallet_build_lbtc_tx(
           NativePortType port_,
           JSAny that,
@@ -787,6 +832,9 @@ extension type LwkCoreWasmModule._(JSObject _) implements JSObject {
       String out_address,
       double fee_rate,
       String asset);
+
+  external void wire__crate__api__wallet__wallet_build_asset_tx_multi(
+      NativePortType port_, JSAny that, JSAny recipients, double fee_rate);
 
   external void wire__crate__api__wallet__wallet_build_lbtc_tx(
       NativePortType port_,

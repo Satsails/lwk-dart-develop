@@ -8,7 +8,7 @@ import 'error.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AssetIdBTreeMapInt`, `AssetIdBTreeMapUInt`, `AssetIdHashMapInt`, `AssetIdHashMapUInt`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `into`, `try_from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `into`, `try_from`
 
 /// Address class which contains both standard and confidential addresses with the address index in the wallet
 class Address {
@@ -53,6 +53,36 @@ class Address {
           confidential == other.confidential &&
           index == other.index &&
           blindingKey == other.blindingKey;
+}
+
+/// A single recipient entry for [`Wallet::build_asset_tx_multi`].
+class AssetRecipient {
+  /// Confidential Liquid address to send to.
+  final String address;
+
+  /// Amount in satoshis of the given asset.
+  final BigInt sats;
+
+  /// Asset id (hex) of the asset being sent.
+  final String asset;
+
+  const AssetRecipient({
+    required this.address,
+    required this.sats,
+    required this.asset,
+  });
+
+  @override
+  int get hashCode => address.hashCode ^ sats.hashCode ^ asset.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetRecipient &&
+          runtimeType == other.runtimeType &&
+          address == other.address &&
+          sats == other.sats &&
+          asset == other.asset;
 }
 
 /// Balance represents a balance of a specific asset

@@ -395,6 +395,17 @@ pub struct PayjoinTx {
     pub asset_fee: u64,
 }
 
+/// A single recipient entry for [`Wallet::build_asset_tx_multi`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct AssetRecipient {
+    /// Confidential Liquid address to send to.
+    pub address: String,
+    /// Amount in satoshis of the given asset.
+    pub sats: u64,
+    /// Asset id (hex) of the asset being sent.
+    pub asset: String,
+}
+
 // #[test]
 // fn test_address_from_script() {
 //     // The script provided: 0014ac45b647d82582d4ed416e5b84fd418789025dc5

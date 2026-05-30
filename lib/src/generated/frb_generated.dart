@@ -71,7 +71,7 @@ class LwkCore extends BaseEntrypoint<LwkCoreApi, LwkCoreApiImpl, LwkCoreWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 119919397;
+  int get rustContentHash => 1740503427;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -119,6 +119,11 @@ abstract class LwkCoreApi extends BaseApi {
       required String outAddress,
       required double feeRate,
       required String asset});
+
+  Future<String> crateApiWalletWalletBuildAssetTxMulti(
+      {required Wallet that,
+      required List<AssetRecipient> recipients,
+      required double feeRate});
 
   Future<String> crateApiWalletWalletBuildLbtcTx(
       {required Wallet that,
@@ -517,6 +522,35 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
       );
 
   @override
+  Future<String> crateApiWalletWalletBuildAssetTxMulti(
+      {required Wallet that,
+      required List<AssetRecipient> recipients,
+      required double feeRate}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_box_autoadd_wallet(that);
+        var arg1 = cst_encode_list_asset_recipient(recipients);
+        var arg2 = cst_encode_f_32(feeRate);
+        return wire.wire__crate__api__wallet__wallet_build_asset_tx_multi(
+            port_, arg0, arg1, arg2);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_String,
+        decodeErrorData: dco_decode_lwk_error,
+      ),
+      constMeta: kCrateApiWalletWalletBuildAssetTxMultiConstMeta,
+      argValues: [that, recipients, feeRate],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiWalletWalletBuildAssetTxMultiConstMeta =>
+      const TaskConstMeta(
+        debugName: "wallet_build_asset_tx_multi",
+        argNames: ["that", "recipients", "feeRate"],
+      );
+
+  @override
   Future<String> crateApiWalletWalletBuildLbtcTx(
       {required Wallet that,
       required BigInt sats,
@@ -828,6 +862,19 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
   }
 
   @protected
+  AssetRecipient dco_decode_asset_recipient(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return AssetRecipient(
+      address: dco_decode_String(arr[0]),
+      sats: dco_decode_u_64(arr[1]),
+      asset: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
   Balance dco_decode_balance(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -905,6 +952,12 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
   PlatformInt64 dco_decode_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<AssetRecipient> dco_decode_list_asset_recipient(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_asset_recipient).toList();
   }
 
   @protected
@@ -1137,6 +1190,16 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
   }
 
   @protected
+  AssetRecipient sse_decode_asset_recipient(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_address = sse_decode_String(deserializer);
+    var var_sats = sse_decode_u_64(deserializer);
+    var var_asset = sse_decode_String(deserializer);
+    return AssetRecipient(
+        address: var_address, sats: var_sats, asset: var_asset);
+  }
+
+  @protected
   Balance sse_decode_balance(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_assetId = sse_decode_String(deserializer);
@@ -1203,6 +1266,19 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  List<AssetRecipient> sse_decode_list_asset_recipient(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <AssetRecipient>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_asset_recipient(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -1496,6 +1572,15 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
   }
 
   @protected
+  void sse_encode_asset_recipient(
+      AssetRecipient self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.address, serializer);
+    sse_encode_u_64(self.sats, serializer);
+    sse_encode_String(self.asset, serializer);
+  }
+
+  @protected
   void sse_encode_balance(Balance self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.assetId, serializer);
@@ -1561,6 +1646,16 @@ class LwkCoreApiImpl extends LwkCoreApiImplPlatform implements LwkCoreApi {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_asset_recipient(
+      List<AssetRecipient> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_asset_recipient(item, serializer);
+    }
   }
 
   @protected

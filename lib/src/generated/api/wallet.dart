@@ -57,6 +57,16 @@ class Wallet {
           feeRate: feeRate,
           asset: asset);
 
+  /// Build a transaction with multiple asset recipients in a single PSET.
+  /// Useful for atomic operations like split-fee withdrawals where the
+  /// same wallet must pay two destinations (e.g. exchange + service fee)
+  /// from one signed transaction.
+  Future<String> buildAssetTxMulti(
+          {required List<AssetRecipient> recipients,
+          required double feeRate}) =>
+      LwkCore.instance.api.crateApiWalletWalletBuildAssetTxMulti(
+          that: this, recipients: recipients, feeRate: feeRate);
+
   /// Build a LBTC transaction
   Future<String> buildLbtcTx(
           {required BigInt sats,

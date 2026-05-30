@@ -32,6 +32,17 @@ typedef struct wire_cst_wallet {
   uintptr_t inner;
 } wire_cst_wallet;
 
+typedef struct wire_cst_asset_recipient {
+  struct wire_cst_list_prim_u_8_strict *address;
+  uint64_t sats;
+  struct wire_cst_list_prim_u_8_strict *asset;
+} wire_cst_asset_recipient;
+
+typedef struct wire_cst_list_asset_recipient {
+  struct wire_cst_asset_recipient *ptr;
+  int32_t len;
+} wire_cst_list_asset_recipient;
+
 typedef struct wire_cst_descriptor {
   struct wire_cst_list_prim_u_8_strict *ct_descriptor;
 } wire_cst_descriptor;
@@ -168,6 +179,11 @@ void frbgen_lwk_wire__crate__api__wallet__wallet_build_asset_tx(int64_t port_,
                                                                 float fee_rate,
                                                                 struct wire_cst_list_prim_u_8_strict *asset);
 
+void frbgen_lwk_wire__crate__api__wallet__wallet_build_asset_tx_multi(int64_t port_,
+                                                                      struct wire_cst_wallet *that,
+                                                                      struct wire_cst_list_asset_recipient *recipients,
+                                                                      float fee_rate);
+
 void frbgen_lwk_wire__crate__api__wallet__wallet_build_lbtc_tx(int64_t port_,
                                                                struct wire_cst_wallet *that,
                                                                uint64_t sats,
@@ -227,6 +243,8 @@ uint32_t *frbgen_lwk_cst_new_box_autoadd_u_32(uint32_t value);
 
 struct wire_cst_wallet *frbgen_lwk_cst_new_box_autoadd_wallet(void);
 
+struct wire_cst_list_asset_recipient *frbgen_lwk_cst_new_list_asset_recipient(int32_t len);
+
 struct wire_cst_list_balance *frbgen_lwk_cst_new_list_balance(int32_t len);
 
 struct wire_cst_list_prim_u_8_loose *frbgen_lwk_cst_new_list_prim_u_8_loose(int32_t len);
@@ -242,6 +260,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_box_autoadd_descriptor);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_box_autoadd_u_32);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_box_autoadd_wallet);
+    dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_list_asset_recipient);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_list_balance);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_list_prim_u_8_loose);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_cst_new_list_prim_u_8_strict);
@@ -262,6 +281,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_balances);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_blinding_key);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_build_asset_tx);
+    dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_build_asset_tx_multi);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_build_lbtc_tx);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_build_payjoin_tx);
     dummy_var ^= ((int64_t) (void*) frbgen_lwk_wire__crate__api__wallet__wallet_decode_tx);

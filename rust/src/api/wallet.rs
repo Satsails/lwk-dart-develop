@@ -20,6 +20,7 @@ use super::descriptor::Descriptor;
 use super::error::LwkError;
 use super::types::Address;
 use super::types::AssetIdBTreeMapUInt;
+use super::types::AssetRecipient;
 use super::types::Balances;
 use super::types::Network;
 use super::types::PsetAmounts;
@@ -166,6 +167,36 @@ impl Wallet {
         };
         let pset = tx_builder
             .add_recipient(&address, sats, asset)?
+            .enable_ct_discount()
+            .fee_rate(Some(fee_rate))
+            .finish()?;
+        Ok(pset.to_string())
+    }
+
+    /// Build a transaction with multiple asset recipients in a single PSET.
+    /// Useful for atomic operations like split-fee withdrawals where the
+    /// same wallet must pay two destinations (e.g. exchange + service fee)
+    /// from one signed transaction.
+    pub fn build_asset_tx_multi(
+        &self,
+        recipients: Vec<AssetRecipient>,
+        fee_rate: f32,
+    ) -> anyhow::Result<String, LwkError> {
+        if recipients.is_empty() {
+            return Err(LwkError {
+                msg: "At least one recipient is required".to_string(),
+            });
+        }
+        let wallet = self.get_wallet()?;
+        let mut tx_builder = wallet.tx_builder();
+        for r in recipients {
+            let address = LwkAddress::from_str(&r.address)?;
+            let asset = LwkAssetId::from_str(&r.asset).map_err(|_| LwkError {
+                msg: "Invalid asset".to_string(),
+            })?;
+            tx_builder = tx_builder.add_recipient(&address, r.sats, asset)?;
+        }
+        let pset = tx_builder
             .enable_ct_discount()
             .fee_rate(Some(fee_rate))
             .finish()?;
